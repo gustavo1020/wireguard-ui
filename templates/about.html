@@ -49,7 +49,7 @@ About
                             <input type="text" class="form-control" id="latestReleaseDate" readonly>
                         </div>
                         <div class="form-group">
-                            <label for="author" class="control-label">Author</label>
+                            <label for="author" class="control-label">Contributor for proyect wireguard-ui by ngoduykhanh</label>
                             <div id="author">
                                 <a id="authorLink">
                                     <img id="authorImage"
@@ -57,15 +57,6 @@ About
                                 </a>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label for="contributors" class="control-label">Contributors</label>
-                            <div id="contributors"></div>
-                        </div>
-                        <strong>Copyright &copy;
-                            <script>document.write(new Date().getFullYear())</script>
-                            <a href="https://github.com/ngoduykhanh/wireguard-ui">Wireguard UI</a>.
-                        </strong> All rights reserved.
-
                     </div>
                 </div>
                 <!-- /.card -->
@@ -83,7 +74,7 @@ About
         $.ajax({
             cache: false,
             method: 'GET',
-            url: 'https://api.github.com/repos/ngoduykhanh/wireguard-ui/releases/tags/' + $("#version").val(),
+            url: 'https://api.github.com/repos/gustavo1020/wireguard-ui/releases/tags/' + $("#version").val(),
             dataType: 'json',
             contentType: "application/json",
             success: function (data) {
@@ -99,7 +90,7 @@ About
         $.ajax({
             cache: false,
             method: 'GET',
-            url: 'https://api.github.com/repos/ngoduykhanh/wireguard-ui/releases/latest',
+            url: 'https://api.github.com/repos/gustavo1020/wireguard-ui/releases/latest',
             dataType: 'json',
             contentType: "application/json",
             success: function (data) {
@@ -115,21 +106,6 @@ About
                 $("#latestRelease").attr("value", "Could not connect to GitHub.com");
                 $("#latestReleaseDate").attr("value", "Could not connect to GitHub.com");
                 $("#author").attr("value", "Could not connect to GitHub.com");
-            }
-        });
-
-        $.ajax({
-            cache: false,
-            method: 'GET',
-            url: 'https://api.github.com/repos/ngoduykhanh/wireguard-ui/contributors',
-            dataType: 'json',
-            contentType: "application/json",
-            success: function (data) {
-                data.forEach(contributor => $("#contributors").append("<a href=\"" + contributor.html_url + "\" title=\"" + contributor.login + "\">" +
-                    "<img src=\"" + contributor.avatar_url + "\" style=\"width: 50px; height: 50px; border-radius: 50%; border: 1px solid #000; margin: 5px;\"/></a>"));
-            },
-            error: function (jqXHR, exception) {
-                $("#contributors").html("<p>Could not connect to GitHub.com</p>");
             }
         });
     });

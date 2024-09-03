@@ -41,6 +41,10 @@ Users Settings
                         <input type="text" class="form-control" id="_user_name" name="_user_name">
                     </div>
                     <div class="form-group">
+                        <label for="_user_email" class="control-label">Email</label>
+                        <input type="text" class="form-control" id="_user_email" name="_user_email">
+                    </div>
+                    <div class="form-group">
                         <label for="_user_password" class="control-label">Password</label>
                         <input type="password" class="form-control" id="_user_password" name="_user_password" value=""
                                placeholder="Leave empty to keep the password unchanged">
@@ -176,6 +180,7 @@ Users Settings
 
                         modal.find(".modal-title").text("Edit user " + user.username);
                         modal.find("#_user_name").val(user.username);
+                        modal.find("#_user_email").val(user.email);
                         modal.find("#_previous_user_name").val(user.username);
                         modal.find("#_user_password").val("");
                         modal.find("#_user_password").prop("placeholder", "Leave empty to keep the password unchanged")
@@ -189,6 +194,7 @@ Users Settings
             } else {
                 modal.find(".modal-title").text("Add new user");
                 modal.find("#_user_name").val("");
+                modal.find("#_user_email").val("");
                 modal.find("#_previous_user_name").val("");
                 modal.find("#_user_password").val("");
                 modal.find("#_user_password").prop("placeholder", "")
@@ -199,6 +205,7 @@ Users Settings
 
     function updateUserInfo() {
         const username = $("#_user_name").val();
+        const email = $("#_user_email").val();
         const previous_username = $("#_previous_user_name").val();
         const password = $("#_user_password").val();
         let admin = false;
@@ -207,6 +214,7 @@ Users Settings
         }
         const data = {
             "username": username,
+            "email": email,
             "password": password,
             "previous_username": previous_username,
             "admin": admin
