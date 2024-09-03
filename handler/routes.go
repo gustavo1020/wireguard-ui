@@ -114,6 +114,7 @@ func Login(db store.IStore) echo.HandlerFunc {
 			sess.Values["username"] = dbuser.Username
 			sess.Values["user_hash"] = util.GetDBUserCRC32(dbuser)
 			sess.Values["admin"] = dbuser.Admin
+			sess.Values["email"] = dbuser.Email
 			sess.Values["session_token"] = tokenUID
 			sess.Values["max_age"] = ageMax
 			sess.Values["created_at"] = now
@@ -185,7 +186,7 @@ func Logout() echo.HandlerFunc {
 func LoadProfile() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.Render(http.StatusOK, "profile.html", map[string]interface{}{
-			"baseData": model.BaseData{Active: "profile", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData": model.BaseData{Active: "profile", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 		})
 	}
 }
@@ -194,7 +195,7 @@ func LoadProfile() echo.HandlerFunc {
 func UsersSettings() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.Render(http.StatusOK, "users_settings.html", map[string]interface{}{
-			"baseData": model.BaseData{Active: "users-settings", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData": model.BaseData{Active: "users-settings", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 		})
 	}
 }
@@ -211,6 +212,7 @@ func UpdateUser(db store.IStore) echo.HandlerFunc {
 
 		username := data["username"].(string)
 		password := data["password"].(string)
+		email := data["email"].(string)
 		previousUsername := data["previous_username"].(string)
 		admin := data["admin"].(bool)
 
@@ -255,7 +257,7 @@ func UpdateUser(db store.IStore) echo.HandlerFunc {
 		if previousUsername != currentUser(c) {
 			user.Admin = admin
 		}
-
+		user.Email = email
 		if err := db.DeleteUser(previousUsername); err != nil {
 			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
 		}
@@ -265,7 +267,7 @@ func UpdateUser(db store.IStore) echo.HandlerFunc {
 		log.Infof("Updated user information successfully")
 
 		if previousUsername == currentUser(c) {
-			setUser(c, user.Username, user.Admin, util.GetDBUserCRC32(user))
+			setUser(c, user.Username, user.Admin, util.GetDBUserCRC32(user), user.Email)
 		}
 
 		return c.JSON(http.StatusOK, jsonHTTPResponse{true, "Updated user information successfully"})
@@ -284,6 +286,7 @@ func CreateUser(db store.IStore) echo.HandlerFunc {
 
 		var user model.User
 		username := data["username"].(string)
+		email := data["email"].(string)
 		password := data["password"].(string)
 		admin := data["admin"].(bool)
 
@@ -305,7 +308,7 @@ func CreateUser(db store.IStore) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, jsonHTTPResponse{false, err.Error()})
 		}
 		user.PasswordHash = hash
-
+		user.Email = email
 		user.Admin = admin
 
 		if err := db.SaveUser(user); err != nil {
@@ -360,7 +363,7 @@ func WireGuardClients(db store.IStore) echo.HandlerFunc {
 		}
 
 		return c.Render(http.StatusOK, "clients.html", map[string]interface{}{
-			"baseData":       model.BaseData{Active: "", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData":       model.BaseData{Active: "", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 			"clientDataList": clientDataList,
 		})
 	}
@@ -835,7 +838,7 @@ func WireGuardServer(db store.IStore) echo.HandlerFunc {
 		}
 
 		return c.Render(http.StatusOK, "server.html", map[string]interface{}{
-			"baseData":        model.BaseData{Active: "wg-server", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData":        model.BaseData{Active: "wg-server", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 			"serverInterface": server.Interface,
 			"serverKeyPair":   server.KeyPair,
 		})
@@ -900,7 +903,7 @@ func GlobalSettings(db store.IStore) echo.HandlerFunc {
 		}
 
 		return c.Render(http.StatusOK, "global_settings.html", map[string]interface{}{
-			"baseData":       model.BaseData{Active: "global-settings", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData":       model.BaseData{Active: "global-settings", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 			"globalSettings": globalSettings,
 		})
 	}
@@ -929,7 +932,7 @@ func Status(db store.IStore) echo.HandlerFunc {
 		wgClient, err := wgctrl.New()
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "status.html", map[string]interface{}{
-				"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+				"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 				"error":    err.Error(),
 				"devices":  nil,
 			})
@@ -938,7 +941,7 @@ func Status(db store.IStore) echo.HandlerFunc {
 		devices, err := wgClient.Devices()
 		if err != nil {
 			return c.Render(http.StatusInternalServerError, "status.html", map[string]interface{}{
-				"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+				"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 				"error":    err.Error(),
 				"devices":  nil,
 			})
@@ -950,7 +953,7 @@ func Status(db store.IStore) echo.HandlerFunc {
 			clients, err := db.GetClients(false)
 			if err != nil {
 				return c.Render(http.StatusInternalServerError, "status.html", map[string]interface{}{
-					"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+					"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 					"error":    err.Error(),
 					"devices":  nil,
 				})
@@ -999,7 +1002,7 @@ func Status(db store.IStore) echo.HandlerFunc {
 		}
 
 		return c.Render(http.StatusOK, "status.html", map[string]interface{}{
-			"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData": model.BaseData{Active: "status", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 			"devices":  devicesVm,
 			"error":    "",
 		})
@@ -1190,7 +1193,7 @@ func GetHashesChanges(db store.IStore) echo.HandlerFunc {
 func AboutPage() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.Render(http.StatusOK, "about.html", map[string]interface{}{
-			"baseData": model.BaseData{Active: "about", CurrentUser: currentUser(c), Admin: isAdmin(c)},
+			"baseData": model.BaseData{Active: "about", CurrentUser: currentUser(c), Admin: isAdmin(c), Email : currentEmail(c)},
 		})
 	}
 }
