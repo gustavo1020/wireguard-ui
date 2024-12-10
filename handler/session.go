@@ -203,16 +203,6 @@ func currentUser(c echo.Context) string {
 	return username
 }
 
-func currentEmail(c echo.Context) string {
-	if util.DisableLogin {
-		return ""
-	}
-
-	sess, _ := session.Get("session", c)
-	email := fmt.Sprintf("%s", sess.Values["email"])
-	return email
-}
-
 // isAdmin to get user type: admin or manager
 func isAdmin(c echo.Context) bool {
 	if util.DisableLogin {
@@ -224,13 +214,11 @@ func isAdmin(c echo.Context) bool {
 	return admin == "true"
 }
 
-func setUser(c echo.Context, username string, admin bool, userCRC32 uint32, email string) {
+func setUser(c echo.Context, username string, admin bool, userCRC32 uint32) {
 	sess, _ := session.Get("session", c)
 	sess.Values["username"] = username
 	sess.Values["user_hash"] = userCRC32
 	sess.Values["admin"] = admin
-	sess.Values["email"] = email
-	fmt.Println("Retrieved email:", email)
 	sess.Save(c.Request(), c.Response())
 }
 
@@ -238,7 +226,6 @@ func setUser(c echo.Context, username string, admin bool, userCRC32 uint32, emai
 func clearSession(c echo.Context) {
 	sess, _ := session.Get("session", c)
 	sess.Values["username"] = ""
-	sess.Values["email"] = ""
 	sess.Values["user_hash"] = 0
 	sess.Values["admin"] = false
 	sess.Values["session_token"] = ""
